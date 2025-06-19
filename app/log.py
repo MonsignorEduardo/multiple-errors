@@ -152,12 +152,7 @@ def setup_logging() -> None:
     logging.getLogger("pymongo.topology").handlers.clear()
     logging.getLogger("pymongo.topology").propagate = False
 
-    # == Configure taskiq loggers to use structured logging ==
-    # Remove any handlers from taskiq loggers and allow logs to propagate
-    #   to the root logger, which will use our structured logging setup.
-    for _log in ["taskiq", "taskiq.worker", "taskiq.broker", "taskiq.scheduler"]:
-        _logger = logging.getLogger(__name__)
-        _logger.propagate = False
+
 
     def _handle_exception(
         exc_type: type[BaseException],
