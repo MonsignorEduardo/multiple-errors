@@ -1,0 +1,61 @@
+name: "temp"
+
+# https://stackoverflow.com/a/48651071
+
+x-common-variables:
+  # App
+  &common-variables
+  ENVIRONMENT: "development"
+  RELOAD: true
+  WORKERS: 1
+  LOG_LEVEL: "INFO"
+  LOG_JSON_FORMAT: false
+
+  # Redis
+  REDIS_HOST: "redis"
+  REDIS_PORT: 6379
+
+  
+
+
+services:
+ 
+  taskiq-worker:
+    user: "1000:1000"
+    image: temp-taskiq-worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /radar
+    volumes:
+      - ./app:/radar/app
+    environment:
+      <<: *common-variables
+
+    entrypoint: [ "taskiq", "worker", "app.tkq:broker","--reload", "--fs-discover", "--tasks-pattern", "**/task_*.py" ,"--no-configure-logging"]
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:8-alpine
+    restart: on-failure
+    ports:
+      - 6378:6379
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: [ 'CMD', 'redis-cli', 'ping' ]
+      interval: 30s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+      start_interval: 1s
+
+networks:
+  default:
+    driver: bridge
+    name: temp
+
+volumes:
+  redis:
